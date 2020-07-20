@@ -1,3 +1,4 @@
 
-item_me.iml
+*.iml
 *.xml
+out

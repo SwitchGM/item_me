@@ -6,6 +6,8 @@ public class ItemMePlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        System.out.println("nothing much to see here yet");
+        this.saveDefaultConfig();
+
+        this.getCommand("itemme").setExecutor(new ItemMeCommands(this));
     }
 }
