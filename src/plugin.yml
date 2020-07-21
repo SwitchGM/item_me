@@ -2,6 +2,7 @@ name: Item_Me
 version: 1.0.0
 author: SwitchGM_
 main: me.joe.bundle_me.item_me.ItemMePlugin
+api-version: 1.13
 commands:
   itemme:
     description: Item me
