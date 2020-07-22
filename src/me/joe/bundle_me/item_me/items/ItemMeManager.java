@@ -1,5 +1,6 @@
 package me.joe.bundle_me.item_me.items;
 
+import com.google.common.collect.Lists;
 import me.joe.bundle_me.item_me.ItemMePlugin;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -11,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,10 @@ public class ItemMeManager {
         this.config = this.plugin.getConfig();
     }
 
-    public void saveItem(String id, ItemStack item) {
+    public boolean saveItem(String id, ItemStack item) {
+        if (this.config.contains(id)) {
+            return false;
+        }
         ItemMeta meta = item.getItemMeta();
 
         HashMap<String, Object> itemInfo = new HashMap<>();
@@ -40,6 +45,7 @@ public class ItemMeManager {
 
         this.saveItemInfo(id, itemInfo);
         this.plugin.saveConfig();
+        return true;
     }
 
     public void saveItemInfo(String id, HashMap<String, Object> itemInfo) {
@@ -199,5 +205,9 @@ public class ItemMeManager {
         }
 
         return enchantments;
+    }
+
+    public List<String> getItems() {
+        return new ArrayList<>(this.config.getKeys(false));
     }
 }
