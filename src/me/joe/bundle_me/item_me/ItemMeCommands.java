@@ -1,5 +1,6 @@
 package me.joe.bundle_me.item_me;
 
+import me.joe.bundle_me.item_me.items.CustomItem;
 import me.joe.bundle_me.item_me.items.CustomItemManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -60,8 +61,8 @@ public class ItemMeCommands implements CommandExecutor {
             return;
         }
 
-        ItemStack item = this.manager.loadItem(args[1]);
-        player.getInventory().addItem(item);
+        CustomItem item = this.manager.getCustomItem(args[1]);
+        player.getInventory().addItem(item.getItem());
 
         this.sendSuccess(player, "You successfully loaded an item");
     }

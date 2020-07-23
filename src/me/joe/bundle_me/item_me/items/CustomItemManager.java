@@ -30,7 +30,7 @@ public class CustomItemManager {
         this.loadItems();
     }
 
-    public boolean saveItem(String id, ItemStack item) { // TODO
+    public boolean saveItem(String id, ItemStack item) {
         if (this.items.containsKey(id)) {
             // TODO - item already exists
             return false;
@@ -38,11 +38,25 @@ public class CustomItemManager {
 
         CustomItem customItem = new CustomItem(item);
         HashMap<String, Object> rawItemInfo = this.getRawItemInfo(customItem);
+        this.items.put(id, customItem);
         this.saveItemInfo(rawItemInfo);
 
+        return true;
     }
 
-    public void loadItems() {  // TODO
+    public boolean saveItem(String id, CustomItem item) {
+        if (this.items.containsKey(id)) {
+            // TODO - item already exists
+            return false;
+        }
+        HashMap<String, Object> rawItemInfo = this.getRawItemInfo(item);
+        this.items.put(id, item);
+        this.saveItemInfo(rawItemInfo);
+
+        return true;
+    }
+
+    public void loadItems() {
         HashMap<String, CustomItem> items = new HashMap<>();
         for (String id : this.config.getKeys(false)) {
             ConfigurationSection itemInfo = this.config.getConfigurationSection(id);
@@ -56,16 +70,26 @@ public class CustomItemManager {
         this.items = items;
     }
 
-    public CustomItem loadItemInfo(ConfigurationSection rawItemInfo) { // TODO
+    public CustomItem loadItemInfo(ConfigurationSection rawItemInfo) {
         HashMap<String, Object> itemInfoMap = this.getItemInfo(rawItemInfo);
         return new CustomItem(itemInfoMap);
     }
 
     private void saveItemInfo(Map<String, Object> rawItemInfo) {
+        this.config.set("name", rawItemInfo.get("name"));
+        this.config.set("material", rawItemInfo.get("material"));
+        this.config.set("lore", rawItemInfo.get("lore"));
+        this.config.set("enchantments", rawItemInfo.get("enchantments"));
+        this.config.set("durability", rawItemInfo.get("durability"));
+        this.config.set("unbreakable", rawItemInfo.get("unbreakable"));
+        this.config.set("safe_enchanted", rawItemInfo.get("safe_enchanted"));
+        this.config.set("lore_enchanted", rawItemInfo.get("lore_enchanted"));
+        this.config.set("shiny", rawItemInfo.get("shiny"));
 
+        this.plugin.saveConfig();
     }
 
-    private HashMap<String, Object> getItemInfo(ConfigurationSection rawItemInfo) { // TODO
+    private HashMap<String, Object> getItemInfo(ConfigurationSection rawItemInfo) {
         HashMap<String, Object> rawItemInfoMap = new HashMap<>();
         rawItemInfoMap.put("name", rawItemInfo.getString("name"));
         rawItemInfoMap.put("material", Material.valueOf(rawItemInfo.getString("material")));
@@ -104,7 +128,7 @@ public class CustomItemManager {
     }
 
     private HashMap<String, Object> getRawItemInfo(CustomItem item) {
-        HashMap<String, Object> rawItemInfo = this.getRawItemInfo(item);
+        HashMap<String, Object> rawItemInfo = this.getRawItemInfo(item.getItem());
         rawItemInfo.put("safe_enchantment", item.isSafeEnchanted());
         rawItemInfo.put("lore_enchantment", item.isLoreEnchanted());
         rawItemInfo.put("shiny", item.isShiny());
@@ -112,7 +136,7 @@ public class CustomItemManager {
         return rawItemInfo;
     }
 
-    private List<String> getItemLore(List<String> rawLore) { // TODO
+    private List<String> getItemLore(List<String> rawLore) {
         List<String> lore = new ArrayList<>();
         for (String line : rawLore) {
             lore.add(ChatColor.translateAlternateColorCodes('&', line));
@@ -121,7 +145,7 @@ public class CustomItemManager {
         return lore;
     }
 
-    private Map<Enchantment, Integer> getItemEnchantments(ConfigurationSection rawEnchantments) { // TODO
+    private Map<Enchantment, Integer> getItemEnchantments(ConfigurationSection rawEnchantments) {
         HashMap<Enchantment, Integer> enchantments = new HashMap<>();
         for (String rawEnchantment : rawEnchantments.getKeys(false)) {
             Enchantment enchantment = EnchantmentWrapper.getByKey(NamespacedKey.minecraft(rawEnchantment));
@@ -172,71 +196,12 @@ public class CustomItemManager {
         return newList;
     }
 
-    public boolean saveItem(String id, ItemStack item) {
-        if (this.items.containsKey(id)) {
-            // TODO - item id already exists
-            return false;
+    public CustomItem getCustomItem(String itemId) {
+        if (!this.items.containsKey(itemId)) {
+            return null;
         }
 
-        CustomItem customItem = new CustomItem(item);
-        HashMap<String, Object> rawItemInfo = this.getRawItemInfo(customItem);
-    }
-
-    public boolean _saveItem(String id, ItemStack item) {
-        if (this.items.containsKey(id)) {
-            return false;
-        }
-
-        if (this.config.contains(id)) {
-            return false;
-        }
-
-        ItemMeta meta = item.getItemMeta();
-
-        HashMap<String, Object> itemInfo = new HashMap<>();
-        itemInfo.put("name", meta.getDisplayName());
-        itemInfo.put("lore", meta.getLore());
-        itemInfo.put("material", item.getType().name());
-        itemInfo.put("amount", item.getAmount());
-        if (meta instanceof Damageable){
-            itemInfo.put("durability", ((Damageable) meta).getDamage());
-        }
-        itemInfo.put("enchantments", this.getRawEnchantments(new HashMap<>(item.getEnchantments())));
-
-        this.items.put(id, item);
-        this.saveItemInfo(id, itemInfo);
-        return true;
-    }
-
-    public void _saveItemInfo(String id, HashMap<String, Object> itemInfo) {
-        for (String key : itemInfo.keySet()) {
-            Object value = itemInfo.get(key);
-            if (key.equalsIgnoreCase("name")) {
-                if (this.checkItemField("name", value)) {
-                    this.config.set(id + ".name", value);
-                }
-            } else if (key.equalsIgnoreCase("lore")) {
-                if (this.checkItemField("lore", value)) {
-                    this.config.set(id + ".lore", value);
-                }
-            } else if (key.equalsIgnoreCase("material")) {
-                if (this.checkItemField("material", value)) {
-                    this.config.set(id + ".material", value);
-                }
-            } else if (key.equalsIgnoreCase("amount")) {
-                if (this.checkItemField("amount", value)) {
-                    this.config.set(id + ".amount", value);
-                }
-            } else if (key.equalsIgnoreCase("durability")) {
-                if (this.checkItemField("durability", value)) {
-                    this.config.set(id + ".durability", value);
-                }
-            } else if (key.equalsIgnoreCase("enchantments")) {
-                if (this.checkItemField("enchantments", value)) {
-                    this.config.set(id + ".enchantments", value);
-                }
-            }
-        }
+        return this.items.get(itemId);
     }
 
     public CustomItem getCustomItem(ItemStack item) {
