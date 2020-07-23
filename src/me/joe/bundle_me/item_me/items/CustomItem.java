@@ -19,8 +19,8 @@ public class CustomItem {
     private Map<Enchantment, Integer> enchantments = new HashMap<>();
     private Integer durability;
     private boolean unbreakable = false;
-    private boolean safeEnchantment = true;
-    private boolean loreEnchantment = false;
+    private boolean safeEnchanted = true;
+    private boolean loreEnchanted = false;
     private boolean shiny = false;
 
     public CustomItem(Material material) {
@@ -37,18 +37,55 @@ public class CustomItem {
         this.lore = meta != null ? meta.getLore() : null;
     }
 
+    @SuppressWarnings("unchecked")
+    public CustomItem(Map<String, Object> itemInfo) {
+        this.name = (String) itemInfo.get("name");
+        this.material = (Material) itemInfo.get("material");
+
+        try {
+            this.lore = (List<String>) itemInfo.get("lore");
+        } catch (ClassCastException e) {
+            System.out.println("ITEM LORE HAS NOT BEEN PROPERLY DEFINED");
+        }
+
+        try {
+            this.enchantments = (Map<Enchantment, Integer>) itemInfo.get("enchantments");
+        } catch (ClassCastException e) {
+            System.out.println("ITEM ENCHANTMENTS HAVE NOT BEEN PROPERLY DEFINED");
+        }
+
+
+        this.durability = (Integer) itemInfo.get("durability");
+        this.unbreakable = (Boolean) itemInfo.get("unbreakable");
+        this.safeEnchanted = (Boolean) itemInfo.get("safe_enchantment");
+        this.loreEnchanted = (Boolean) itemInfo.get("lore_enchantment");
+        this.shiny = (Boolean) itemInfo.get("shiny");
+    }
+
     public ItemStack getItem() {
         ItemStack item = new ItemStack(this.material);
-        if (this.safeEnchantment) item.addEnchantments(this.enchantments); else item.addUnsafeEnchantments(this.enchantments);
+        if (this.safeEnchanted) {
+            item.addEnchantments(this.enchantments);
+        } else {
+            item.addUnsafeEnchantments(this.enchantments);
+        }
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(this.name);
             meta.setLore(this.lore);
-            if (meta instanceof Damageable) ((Damageable) meta).setDamage(this.getItemDurability());
+            if (meta instanceof Damageable) {
+                ((Damageable) meta).setDamage(this.getItemDurability());
+            }
+
             meta.setUnbreakable(this.unbreakable);
-            if (this.loreEnchantment) this.setItemLoreEnchantment(meta);
-            if (this.shiny) this.setItemSniny(meta);
+            if (this.loreEnchanted) {
+                this.setItemLoreEnchantment(meta);
+            }
+
+            if (this.shiny) {
+                this.setItemShiny(meta);
+            }
         }
 
         item.setItemMeta(meta);
@@ -61,7 +98,7 @@ public class CustomItem {
         return item;
     }
 
-    private int getItemDurability() {
+    public int getItemDurability() {
         return this.material.getMaxDurability() - this.durability;
     }
 
@@ -70,8 +107,11 @@ public class CustomItem {
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
     }
 
-    private void setItemSniny(ItemMeta meta) {
-        if (!meta.hasEnchants()) meta.addEnchant(Enchantment.DURABILITY,1, true);
+    private void setItemShiny(ItemMeta meta) {
+        if (!meta.hasEnchants()) {
+            meta.addEnchant(Enchantment.DURABILITY,1, true);
+        }
+
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
     }
 
@@ -129,21 +169,21 @@ public class CustomItem {
         return this;
     }
 
-    public boolean isSafeEnchantment() {
-        return safeEnchantment;
+    public boolean isSafeEnchanted() {
+        return safeEnchanted;
     }
 
-    public CustomItem setSafeEnchantment(boolean safeEnchantment) {
-        this.safeEnchantment = safeEnchantment;
+    public CustomItem setSafeEnchanted(boolean safeEnchanted) {
+        this.safeEnchanted = safeEnchanted;
         return this;
     }
 
-    public boolean isLoreEnchantment() {
-        return loreEnchantment;
+    public boolean isLoreEnchanted() {
+        return loreEnchanted;
     }
 
-    public CustomItem setLoreEnchantment(boolean loreEnchantment) {
-        this.loreEnchantment = loreEnchantment;
+    public CustomItem setLoreEnchanted(boolean loreEnchanted) {
+        this.loreEnchanted = loreEnchanted;
         return this;
     }
 
@@ -154,5 +194,10 @@ public class CustomItem {
     public CustomItem setShiny(boolean shiny) {
         this.shiny = shiny;
         return this;
+    }
+
+    public boolean isSimilar(ItemStack item) {
+        ItemStack thisItem = this.getItem();
+        return thisItem.isSimilar(item);
     }
 }

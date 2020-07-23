@@ -1,6 +1,6 @@
 package me.joe.bundle_me.item_me;
 
-import me.joe.bundle_me.item_me.items.ItemMeManager;
+import me.joe.bundle_me.item_me.items.CustomItemManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -12,11 +12,11 @@ import org.bukkit.inventory.ItemStack;
 public class ItemMeCommands implements CommandExecutor {
 
     private ItemMePlugin plugin;
-    private ItemMeManager manager;
+    private CustomItemManager manager;
 
     public ItemMeCommands(ItemMePlugin plugin) {
         this.plugin = plugin;
-        this.manager = new ItemMeManager(plugin);
+        this.manager = new CustomItemManager(plugin);
     }
 
     @Override

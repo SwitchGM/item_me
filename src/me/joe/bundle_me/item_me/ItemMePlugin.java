@@ -8,6 +8,8 @@ public class ItemMePlugin extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
 
+//        this.getServer().getPluginManager().registerEvents(new ItemMeListener(), this);
+
         this.getCommand("itemme").setExecutor(new ItemMeCommands(this));
     }
 }
