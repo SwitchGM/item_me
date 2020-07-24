@@ -1,5 +1,7 @@
 package me.joe.bundle_me.item_me.items;
 
+import com.mysql.fabric.xmlrpc.base.Array;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -7,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +33,11 @@ public class CustomItem {
     public CustomItem(ItemStack item) {
         this.material = item.getType();
         this.enchantments = item.getEnchantments();
-        this.durability = item instanceof Damageable ? this.getItemDurability() : null;
 
         ItemMeta meta = item.getItemMeta();
         this.name = meta != null ? meta.getDisplayName() : null;
         this.lore = meta != null ? meta.getLore() : null;
+        this.durability = meta instanceof Damageable ? ((Damageable) meta).getDamage() : null;
     }
 
     @SuppressWarnings("unchecked")
@@ -54,11 +57,10 @@ public class CustomItem {
             System.out.println("ITEM ENCHANTMENTS HAVE NOT BEEN PROPERLY DEFINED");
         }
 
-
         this.durability = (Integer) itemInfo.get("durability");
         this.unbreakable = (Boolean) itemInfo.get("unbreakable");
-        this.safeEnchanted = (Boolean) itemInfo.get("safe_enchantment");
-        this.loreEnchanted = (Boolean) itemInfo.get("lore_enchantment");
+        this.safeEnchanted = (Boolean) itemInfo.get("safe_enchanted");
+        this.loreEnchanted = (Boolean) itemInfo.get("lore_enchanted");
         this.shiny = (Boolean) itemInfo.get("shiny");
     }
 
@@ -72,10 +74,10 @@ public class CustomItem {
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(this.name);
-            meta.setLore(this.lore);
+            meta.setDisplayName(this.translateColors(this.name));
+            meta.setLore(this.translateColors(this.lore));
             if (meta instanceof Damageable) {
-                ((Damageable) meta).setDamage(this.getItemDurability());
+                ((Damageable) meta).setDamage(this.material.getMaxDurability() - this.durability);
             }
 
             meta.setUnbreakable(this.unbreakable);
@@ -98,10 +100,6 @@ public class CustomItem {
         return item;
     }
 
-    public int getItemDurability() {
-        return this.material.getMaxDurability() - this.durability;
-    }
-
     private void setItemLoreEnchantment(ItemMeta meta) {
         // TODO - get lore lines from CustomItemManager config file
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
@@ -113,6 +111,19 @@ public class CustomItem {
         }
 
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+    }
+
+    private String translateColors(String string) {
+        return ChatColor.translateAlternateColorCodes('&', string);
+    }
+
+    private List<String> translateColors(List<String> list) {
+        ArrayList<String> newList = new ArrayList<>();
+        for (String line : list) {
+            newList.add(this.translateColors(line));
+        }
+
+        return newList;
     }
 
     public String getName() {
@@ -152,7 +163,7 @@ public class CustomItem {
     }
 
     public int getDurability() {
-        return durability;
+        return this.durability;
     }
 
     public CustomItem setDurability(int durability) {

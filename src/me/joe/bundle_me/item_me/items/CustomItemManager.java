@@ -37,9 +37,8 @@ public class CustomItemManager {
         }
 
         CustomItem customItem = new CustomItem(item);
-        HashMap<String, Object> rawItemInfo = this.getRawItemInfo(customItem);
-        this.items.put(id, customItem);
-        this.saveItemInfo(rawItemInfo);
+
+        this.saveItem(id, customItem);
 
         return true;
     }
@@ -51,7 +50,7 @@ public class CustomItemManager {
         }
         HashMap<String, Object> rawItemInfo = this.getRawItemInfo(item);
         this.items.put(id, item);
-        this.saveItemInfo(rawItemInfo);
+        this.saveItemInfo(id, rawItemInfo);
 
         return true;
     }
@@ -70,21 +69,26 @@ public class CustomItemManager {
         this.items = items;
     }
 
+    public void reload() {
+        this.plugin.reloadConfig();
+        this.loadItems();
+    }
+
     public CustomItem loadItemInfo(ConfigurationSection rawItemInfo) {
         HashMap<String, Object> itemInfoMap = this.getItemInfo(rawItemInfo);
         return new CustomItem(itemInfoMap);
     }
 
-    private void saveItemInfo(Map<String, Object> rawItemInfo) {
-        this.config.set("name", rawItemInfo.get("name"));
-        this.config.set("material", rawItemInfo.get("material"));
-        this.config.set("lore", rawItemInfo.get("lore"));
-        this.config.set("enchantments", rawItemInfo.get("enchantments"));
-        this.config.set("durability", rawItemInfo.get("durability"));
-        this.config.set("unbreakable", rawItemInfo.get("unbreakable"));
-        this.config.set("safe_enchanted", rawItemInfo.get("safe_enchanted"));
-        this.config.set("lore_enchanted", rawItemInfo.get("lore_enchanted"));
-        this.config.set("shiny", rawItemInfo.get("shiny"));
+    private void saveItemInfo(String id, Map<String, Object> rawItemInfo) {
+        this.config.set(id + ".name", rawItemInfo.get("name"));
+        this.config.set(id + ".material", rawItemInfo.get("material"));
+        this.config.set(id + ".lore", rawItemInfo.get("lore"));
+        this.config.set(id + ".enchantments", rawItemInfo.get("enchantments"));
+        this.config.set(id + ".durability", rawItemInfo.get("durability"));
+        this.config.set(id + ".unbreakable", rawItemInfo.get("unbreakable"));
+        this.config.set(id + ".safe_enchanted", rawItemInfo.get("safe_enchanted"));
+        this.config.set(id + ".lore_enchanted", rawItemInfo.get("lore_enchanted"));
+        this.config.set(id + ".shiny", rawItemInfo.get("shiny"));
 
         this.plugin.saveConfig();
     }
@@ -92,7 +96,11 @@ public class CustomItemManager {
     private HashMap<String, Object> getItemInfo(ConfigurationSection rawItemInfo) {
         HashMap<String, Object> rawItemInfoMap = new HashMap<>();
         rawItemInfoMap.put("name", rawItemInfo.getString("name"));
-        rawItemInfoMap.put("material", Material.valueOf(rawItemInfo.getString("material")));
+        String rawMaterial = rawItemInfo.getString("material");
+        if (rawMaterial != null) {
+            rawItemInfoMap.put("material", Material.matchMaterial(rawMaterial.toUpperCase()));
+        }
+
         rawItemInfoMap.put("lore", this.getItemLore(rawItemInfo.getStringList("lore")));
 
         ConfigurationSection rawEnchantments = rawItemInfo.getConfigurationSection("enchantments");

@@ -2,6 +2,7 @@ package me.joe.bundle_me.item_me;
 
 import me.joe.bundle_me.item_me.items.CustomItem;
 import me.joe.bundle_me.item_me.items.CustomItemManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -29,30 +30,34 @@ public class ItemMeCommands implements CommandExecutor {
 
         String subCommand = strings[0];
         switch (subCommand) {
-            case "load":
-                this.loadItem(commandSender, strings);
+            case "give":
+                this.giveItem(commandSender, strings);
                 break;
             case "save":
                 this.saveItem(commandSender, strings);
                 break;
             case "list":
                 this.listItems(commandSender);
+                break;
+            case "reload":
+                this.reload(commandSender);
+                break;
             default:
                 // help command yo
         }
         return false;
     }
 
-    private void loadItem(CommandSender commandSender, String[] args) {
+    private void giveItem(CommandSender commandSender, String[] args) {
         if (!(commandSender instanceof Player)) {
-            System.out.println("you you must be a player to run this command!");
+            System.out.println("you must be a player to run this command!");
             return;
         }
 
         Player player = (Player) commandSender;
 
         if (args.length == 1) {
-            this.sendError(player, "You did not specify an item id to load");
+            this.sendError(player, "You did not specify an item id to give");
             return;
         }
 
@@ -62,14 +67,28 @@ public class ItemMeCommands implements CommandExecutor {
         }
 
         CustomItem item = this.manager.getCustomItem(args[1]);
+
+        if (args.length == 3) {
+            Player targetPlayer = Bukkit.getServer().getPlayerExact(args[2]);
+            if (targetPlayer == null) {
+                this.sendError(player, "The target player was not found");
+                return;
+            }
+
+            targetPlayer.getInventory().addItem(item.getItem());
+
+            this.sendSuccess(player, "You successfully gave an item");
+            return;
+        }
+
         player.getInventory().addItem(item.getItem());
 
-        this.sendSuccess(player, "You successfully loaded an item");
+        this.sendSuccess(player, "You successfully gave an item");
     }
 
     private void saveItem(CommandSender commandSender, String[] args) {
         if (!(commandSender instanceof Player)) {
-            System.out.println("you you must be a player to run this command!");
+            System.out.println("you must be a player to run this command!");
             return;
         }
 
@@ -96,7 +115,7 @@ public class ItemMeCommands implements CommandExecutor {
 
     private void listItems(CommandSender commandSender) {
         if (!(commandSender instanceof Player)) {
-            System.out.println("you you must be a player to run this command!");
+            System.out.println("you must be a player to run this command!");
             return;
         }
 
@@ -106,6 +125,18 @@ public class ItemMeCommands implements CommandExecutor {
         for (String item : this.manager.getItems()) {
             player.sendMessage(item);
         }
+    }
+
+    private void reload(CommandSender commandSender) {
+        if (!(commandSender instanceof Player)) {
+            System.out.println("you must be a player to run this command!");
+            return;
+        }
+
+        Player player = (Player) commandSender;
+
+        this.manager.reload();
+        this.sendSuccess(player, "Successfully reloaded config");
     }
 
     private void sendError(Player player, String error) {
