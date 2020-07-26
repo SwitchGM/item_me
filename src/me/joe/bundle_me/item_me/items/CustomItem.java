@@ -114,6 +114,10 @@ public class CustomItem {
     }
 
     private String translateColors(String string) {
+        if (string == null) {
+            return "";
+        }
+
         return ChatColor.translateAlternateColorCodes('&', string);
     }
 
