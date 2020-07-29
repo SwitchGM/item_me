@@ -43,9 +43,13 @@ public class ItemMeCommands implements CommandExecutor {
                 this.reload(commandSender);
                 break;
             default:
-                // help command yo
+                this.test(commandSender);
         }
         return false;
+    }
+
+    private void test(CommandSender commandSender) {
+        // anything testy during development :D
     }
 
     private void giveItem(CommandSender commandSender, String[] args) {

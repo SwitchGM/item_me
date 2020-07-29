@@ -20,7 +20,7 @@ public class CustomItem {
     private Material material;
     private List<String> lore;
     private Map<Enchantment, Integer> enchantments = new HashMap<>();
-    private Integer durability;
+    private Integer durability = 0;
     private boolean unbreakable = false;
     private boolean safeEnchanted = true;
     private boolean loreEnchanted = false;
@@ -48,13 +48,11 @@ public class CustomItem {
         try {
             this.lore = (List<String>) itemInfo.get("lore");
         } catch (ClassCastException e) {
-            System.out.println("ITEM LORE HAS NOT BEEN PROPERLY DEFINED");
         }
 
         try {
             this.enchantments = (Map<Enchantment, Integer>) itemInfo.get("enchantments");
         } catch (ClassCastException e) {
-            System.out.println("ITEM ENCHANTMENTS HAVE NOT BEEN PROPERLY DEFINED");
         }
 
         this.durability = (Integer) itemInfo.get("durability");
@@ -75,9 +73,12 @@ public class CustomItem {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(this.translateColors(this.name));
-            meta.setLore(this.translateColors(this.lore));
-            if (meta instanceof Damageable) {
-                ((Damageable) meta).setDamage(this.material.getMaxDurability() - this.durability);
+
+            List<String> tranLore = this.translateColors(this.lore);
+
+            meta.setLore(tranLore);
+            if (this.material.getMaxDurability() != 0) {
+                ((Damageable) meta).setDamage(this.getDurability() - this.material.getMaxDurability());
             }
 
             meta.setUnbreakable(this.unbreakable);
@@ -123,6 +124,10 @@ public class CustomItem {
 
     private List<String> translateColors(List<String> list) {
         ArrayList<String> newList = new ArrayList<>();
+        if (list == null) {
+            return newList;
+        }
+
         for (String line : list) {
             newList.add(this.translateColors(line));
         }
@@ -167,7 +172,7 @@ public class CustomItem {
     }
 
     public int getDurability() {
-        return this.durability;
+        return this.material.getMaxDurability() == 0 ? this.durability : this.material.getMaxDurability();
     }
 
     public CustomItem setDurability(int durability) {
