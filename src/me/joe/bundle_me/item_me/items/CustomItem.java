@@ -1,6 +1,5 @@
 package me.joe.bundle_me.item_me.items;
 
-import com.mysql.fabric.xmlrpc.base.Array;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -22,9 +21,11 @@ public class CustomItem {
     private Map<Enchantment, Integer> enchantments = new HashMap<>();
     private Integer durability = 0;
     private boolean unbreakable = false;
-    private boolean safeEnchanted = true;
+    private boolean safeEnchanted = false;
     private boolean loreEnchanted = false;
     private boolean shiny = false;
+    private List<CustomCraftingRecipe> recipes = new ArrayList<>();
+    private Integer modelData = 0;
 
     public CustomItem(Material material) {
         this.material = material;
@@ -38,50 +39,48 @@ public class CustomItem {
         this.name = meta != null ? meta.getDisplayName() : null;
         this.lore = meta != null ? meta.getLore() : null;
         this.durability = meta instanceof Damageable ? ((Damageable) meta).getDamage() : null;
+        this.modelData = meta != null ? meta.getCustomModelData() : 0;
     }
 
     @SuppressWarnings("unchecked")
     public CustomItem(Map<String, Object> itemInfo) {
         this.name = (String) itemInfo.get("name");
         this.material = (Material) itemInfo.get("material");
-
-        try {
-            this.lore = (List<String>) itemInfo.get("lore");
-        } catch (ClassCastException e) {
-        }
-
-        try {
-            this.enchantments = (Map<Enchantment, Integer>) itemInfo.get("enchantments");
-        } catch (ClassCastException e) {
-        }
-
         this.durability = (Integer) itemInfo.get("durability");
         this.unbreakable = (Boolean) itemInfo.get("unbreakable");
         this.safeEnchanted = (Boolean) itemInfo.get("safe_enchanted");
         this.loreEnchanted = (Boolean) itemInfo.get("lore_enchanted");
         this.shiny = (Boolean) itemInfo.get("shiny");
+        this.modelData = (Integer) itemInfo.get("model_data");
+
+        try {
+            this.lore = (List<String>) itemInfo.get("lore");
+            this.enchantments = (Map<Enchantment, Integer>) itemInfo.get("enchantments");
+            this.recipes = (List<CustomCraftingRecipe>) itemInfo.get("recipes");
+            for (CustomCraftingRecipe craftingRecipe : this.recipes) {
+                craftingRecipe.setResult(this.getItem());
+            }
+        } catch (ClassCastException e) {
+            throw new Error(e.getMessage());
+        }
     }
 
     public ItemStack getItem() {
         ItemStack item = new ItemStack(this.material);
-        if (this.safeEnchanted) {
-            item.addEnchantments(this.enchantments);
-        } else {
-            item.addUnsafeEnchantments(this.enchantments);
-        }
+        item.addUnsafeEnchantments(this.enchantments);
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(this.translateColors(this.name));
-
             List<String> tranLore = this.translateColors(this.lore);
-
             meta.setLore(tranLore);
+            meta.setUnbreakable(this.unbreakable);
+            meta.setCustomModelData(this.modelData);
+
             if (this.material.getMaxDurability() != 0) {
                 ((Damageable) meta).setDamage(this.getDurability() - this.material.getMaxDurability());
             }
 
-            meta.setUnbreakable(this.unbreakable);
             if (this.loreEnchanted) {
                 this.setItemLoreEnchantment(meta);
             }
@@ -92,6 +91,7 @@ public class CustomItem {
         }
 
         item.setItemMeta(meta);
+
         return item;
     }
 
@@ -139,13 +139,50 @@ public class CustomItem {
         return name;
     }
 
+    public Material getMaterial() {
+        return material;
+    }
+
+    public List<String> getLore() {
+        return lore;
+    }
+
+    public Map<Enchantment, Integer> getEnchantments() {
+        return enchantments;
+    }
+
+    public int getDurability() {
+        return this.material.getMaxDurability() == 0 ? this.durability : this.material.getMaxDurability();
+    }
+
+    public boolean isUnbreakable() {
+        return unbreakable;
+    }
+
+    @Deprecated
+    public boolean isSafeEnchanted() {
+        return safeEnchanted;
+    }
+
+    public boolean isLoreEnchanted() {
+        return loreEnchanted;
+    }
+
+    public boolean isShiny() {
+        return shiny;
+    }
+
+    public List<CustomCraftingRecipe> getRecipes() {
+        return this.recipes;
+    }
+
+    public Integer getModelData() {
+        return this.modelData;
+    }
+
     public CustomItem setName(String name) {
         this.name = name;
         return this;
-    }
-
-    public Material getMaterial() {
-        return material;
     }
 
     public CustomItem setMaterial(Material material) {
@@ -153,17 +190,9 @@ public class CustomItem {
         return this;
     }
 
-    public List<String> getLore() {
-        return lore;
-    }
-
     public CustomItem setLore(List<String> lore) {
         this.lore = lore;
         return this;
-    }
-
-    public Map<Enchantment, Integer> getEnchantments() {
-        return enchantments;
     }
 
     public CustomItem setEnchantments(Map<Enchantment, Integer> enchantments) {
@@ -171,17 +200,9 @@ public class CustomItem {
         return this;
     }
 
-    public int getDurability() {
-        return this.material.getMaxDurability() == 0 ? this.durability : this.material.getMaxDurability();
-    }
-
     public CustomItem setDurability(int durability) {
         this.durability = durability;
         return this;
-    }
-
-    public boolean isUnbreakable() {
-        return unbreakable;
     }
 
     public CustomItem setUnbreakable(boolean unbreakable) {
@@ -189,17 +210,10 @@ public class CustomItem {
         return this;
     }
 
-    public boolean isSafeEnchanted() {
-        return safeEnchanted;
-    }
-
+    @Deprecated
     public CustomItem setSafeEnchanted(boolean safeEnchanted) {
         this.safeEnchanted = safeEnchanted;
         return this;
-    }
-
-    public boolean isLoreEnchanted() {
-        return loreEnchanted;
     }
 
     public CustomItem setLoreEnchanted(boolean loreEnchanted) {
@@ -207,12 +221,18 @@ public class CustomItem {
         return this;
     }
 
-    public boolean isShiny() {
-        return shiny;
-    }
-
     public CustomItem setShiny(boolean shiny) {
         this.shiny = shiny;
+        return this;
+    }
+
+    public CustomItem setRecipes(List<CustomCraftingRecipe> recipes) {
+        this.recipes = recipes;
+        return this;
+    }
+
+    public CustomItem setModelData(Integer modelData) {
+        this.modelData = modelData;
         return this;
     }
 

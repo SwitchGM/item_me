@@ -12,10 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CustomItemManager {
 
@@ -27,7 +24,6 @@ public class CustomItemManager {
     public CustomItemManager(ItemMePlugin plugin) {
         this.plugin = plugin;
         this.config = this.plugin.getConfig();
-        this.loadItems();
     }
 
     public boolean saveItem(String id, ItemStack item) {
@@ -67,9 +63,33 @@ public class CustomItemManager {
         }
 
         this.items = items;
+
+        this.registerItemCraftingRecipes();
+    }
+
+    private void registerItemCraftingRecipes() {
+        for (String id : this.items.keySet()) {
+            CustomItem item = this.items.get(id);
+            for (CustomCraftingRecipe craftingRecipe : item.getRecipes()) {
+                this.plugin.getServer().addRecipe(craftingRecipe.getShapedRecipe());
+            }
+        }
+    }
+
+    private void unregisterItemCraftingRecipes() {
+        for (String id : this.items.keySet()) {
+            CustomItem item = this.items.get(id);
+            for (CustomCraftingRecipe craftingRecipe : item.getRecipes()) {
+                NamespacedKey key = craftingRecipe.getKey();
+                this.plugin.getServer().removeRecipe(key);
+            }
+        }
     }
 
     public void reload() {
+        this.unregisterItemCraftingRecipes();
+        this.items = new HashMap<>();
+
         this.plugin.reloadConfig();
         this.loadItems();
     }
@@ -89,30 +109,38 @@ public class CustomItemManager {
         this.config.set(id + ".safe_enchanted", rawItemInfo.get("safe_enchanted"));
         this.config.set(id + ".lore_enchanted", rawItemInfo.get("lore_enchanted"));
         this.config.set(id + ".shiny", rawItemInfo.get("shiny"));
+        this.config.set(id + ".recipes", rawItemInfo.get("recipes"));
+        this.config.set(id + ".model_data", rawItemInfo.get("model_data"));
 
         this.plugin.saveConfig();
     }
 
     private HashMap<String, Object> getItemInfo(ConfigurationSection rawItemInfo) {
         HashMap<String, Object> rawItemInfoMap = new HashMap<>();
+
         rawItemInfoMap.put("name", rawItemInfo.getString("name"));
+        rawItemInfoMap.put("lore", this.getItemLore(rawItemInfo.getStringList("lore")));
+        rawItemInfoMap.put("durability", rawItemInfo.getInt("durability"));
+        rawItemInfoMap.put("unbreakable", rawItemInfo.getBoolean("unbreakable"));
+        rawItemInfoMap.put("safe_enchanted", rawItemInfo.getBoolean("safe_enchanted"));
+        rawItemInfoMap.put("lore_enchanted", rawItemInfo.getBoolean("lore_enchanted"));
+        rawItemInfoMap.put("shiny", rawItemInfo.getBoolean("shiny"));
+        rawItemInfoMap.put("model_data", rawItemInfo.getInt("model_data"));
+
         String rawMaterial = rawItemInfo.getString("material");
         if (rawMaterial != null) {
             rawItemInfoMap.put("material", Material.matchMaterial(rawMaterial.toUpperCase()));
         }
-
-        rawItemInfoMap.put("lore", this.getItemLore(rawItemInfo.getStringList("lore")));
 
         ConfigurationSection rawEnchantments = rawItemInfo.getConfigurationSection("enchantments");
         if (rawEnchantments != null) {
             rawItemInfoMap.put("enchantments", this.getItemEnchantments(rawEnchantments));
         }
 
-        rawItemInfoMap.put("durability", rawItemInfo.getInt("durability"));
-        rawItemInfoMap.put("unbreakable", rawItemInfo.getBoolean("unbreakable"));
-        rawItemInfoMap.put("safe_enchanted", rawItemInfo.getBoolean("safe_enchanted"));
-        rawItemInfoMap.put("lore_enchanted", rawItemInfo.getBoolean("lore_enchanted"));
-        rawItemInfoMap.put("shiny", rawItemInfo.getBoolean("shiny"));
+        ConfigurationSection rawCraftingRecipes = rawItemInfo.getConfigurationSection("recipes");
+        if (rawCraftingRecipes != null) {
+            rawItemInfoMap.put("recipes", this.getItemCraftingRecipes(rawCraftingRecipes));
+        }
 
         return rawItemInfoMap;
     }
@@ -125,11 +153,13 @@ public class CustomItemManager {
         if (meta != null) {
             rawItemInfo.put("name", this.reverseToAlternateColor(meta.getDisplayName()));
             rawItemInfo.put("lore", this.reverseToAlternateColor(meta.getLore()));
+            rawItemInfo.put("unbreakable", meta.isUnbreakable());
+            rawItemInfo.put("model_data", meta.getCustomModelData());
+
             if (meta instanceof Damageable) {
                 rawItemInfo.put("durability", ((Damageable) meta).getDamage());
             }
 
-            rawItemInfo.put("unbreakable", meta.isUnbreakable());
         }
 
         return rawItemInfo;
@@ -140,6 +170,7 @@ public class CustomItemManager {
         rawItemInfo.put("safe_enchantment", item.isSafeEnchanted());
         rawItemInfo.put("lore_enchantment", item.isLoreEnchanted());
         rawItemInfo.put("shiny", item.isShiny());
+        rawItemInfo.put("recipes", this.getRawItemCraftingRecipes(item.getRecipes()));
 
         return rawItemInfo;
     }
@@ -165,6 +196,41 @@ public class CustomItemManager {
         return enchantments;
     }
 
+    private List<CustomCraftingRecipe> getItemCraftingRecipes(ConfigurationSection rawCraftingRecipes) {
+        List<CustomCraftingRecipe> craftingRecipes = new ArrayList<>();
+        for (String recipeKey : rawCraftingRecipes.getKeys(false)) {
+            ConfigurationSection rawCraftingRecipe = rawCraftingRecipes.getConfigurationSection(recipeKey);
+            if (rawCraftingRecipe != null) {
+                CustomCraftingRecipe shapedRecipe = this.getCraftingRecipe(rawCraftingRecipe, recipeKey);
+                craftingRecipes.add(shapedRecipe);
+            }
+        }
+
+        return craftingRecipes;
+    }
+
+    private CustomCraftingRecipe getCraftingRecipe(ConfigurationSection rawCraftingRecipe, String recipeKey) {
+        NamespacedKey namespacedKey = new NamespacedKey(this.plugin, recipeKey);
+        CustomCraftingRecipe craftingRecipe = new CustomCraftingRecipe(namespacedKey);
+
+        craftingRecipe.setShape(rawCraftingRecipe.getStringList("shape"));
+
+        ConfigurationSection rawMaterials = rawCraftingRecipe.getConfigurationSection("materials");
+        Map<Character, Material> materials = new HashMap<>();
+        if (rawMaterials != null) {
+            for (String materialCharacter : rawMaterials.getKeys(false)) {
+                String rawMaterial = rawMaterials.getString(materialCharacter);
+                if (rawMaterial != null) {
+                    materials.put(materialCharacter.charAt(0), Material.matchMaterial(rawMaterial.toUpperCase()));
+                }
+            }
+        }
+
+        craftingRecipe.setMaterials(materials);
+
+        return craftingRecipe;
+    }
+
     private Map<String, Integer> getRawItemEnchantments(Map<Enchantment, Integer> enchantments) {
         HashMap<String, Integer> rawEnchantments = new HashMap<>();
         for (Enchantment enchantment : enchantments.keySet()) {
@@ -175,6 +241,27 @@ public class CustomItemManager {
         }
 
         return rawEnchantments;
+    }
+
+    private Map<Integer, Map<String, Object>> getRawItemCraftingRecipes(List<CustomCraftingRecipe> craftingRecipes) {
+        HashMap<Integer, Map<String, Object>> rawCraftingRecipes = new HashMap<>();
+        for (CustomCraftingRecipe craftingRecipe : craftingRecipes) {
+            HashMap<String, Object> rawCraftingRecipe = new HashMap<>();
+            List<String> rawShape = Arrays.asList(craftingRecipe.getShapedRecipe().getShape());
+
+            HashMap<String, String> rawMaterials = new HashMap<>();
+            for (Character character : craftingRecipe.getMaterials().keySet()) {
+                Material material = craftingRecipe.getMaterials().get(character);
+                rawMaterials.put(String.valueOf(character), material.getKey().getKey());
+            }
+
+            rawCraftingRecipe.put("shape", rawShape);
+            rawCraftingRecipe.put("materials", rawMaterials);
+
+            rawCraftingRecipes.put(craftingRecipes.lastIndexOf(craftingRecipe), rawCraftingRecipe);
+        }
+
+        return rawCraftingRecipes;
     }
 
     private String reverseToAlternateColor(String text) {

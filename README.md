@@ -4,6 +4,10 @@
 **Item Me** is a plugin and API for creating custom items in Minecraft. Built from Spigot 1.16.1, and supports Minecraft versions from 1.13+.
 
 ## Basic Commands
+List saved items
+```markdown
+/itemme list
+```
 Give a saved item to a player
 ```markdown
 /itemme give (item_id) <player>
@@ -30,7 +34,7 @@ CustomItem customItem = new CustomItem(minecraftItem);
 You can also create the custom item by passing in a map of the item info
 ```java
 Map<String, Object> itemInfo = new HashMap(){};
-itemInfo.put("name", "Here's a name!");
+itemInfo.put("material", "stick");
 
 CustomItem customItem = new CustomItem(itemInfo);
 ```
@@ -100,6 +104,18 @@ item.setShiny(true);
 
 boolean isShiny = item.isShiny();
 ```
+You can set the crafting recipe for the item (for custom crafting) 
+```java
+// But not just yet :D
+```
+You can set the item model data (used with resource pack textures) 
+```java
+CustomItem item = new CustomItem(Material.STICK);
+item.setModelData(1);
+
+Integer modelData = item.getModelData();
+```
+
 ### The Custom Item Manager
 The custom item manager is responsible for handling the saving, getting and loading of custom items from the custom item yml list.
 
