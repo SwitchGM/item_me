@@ -13,7 +13,10 @@ public class ItemMePlugin extends JavaPlugin {
         this.manager = new CustomItemManager(this);
 
         this.saveDefaultConfig();
+        this.getServer().getPluginManager().registerEvents(new ItemMeListener(this, this.manager), this);
         this.getServer().getPluginManager().registerEvents(new CustomItemEventListener(this, this.manager), this);
-        this.getCommand("itemme").setExecutor(new ItemMeCommands(this));
+        this.getCommand("itemme").setExecutor(new ItemMeCommands(this, this.manager));
+
+        this.manager.loadItems();
     }
 }

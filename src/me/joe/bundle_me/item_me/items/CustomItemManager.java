@@ -8,6 +8,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.enchantments.EnchantmentWrapper;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -65,6 +66,7 @@ public class CustomItemManager {
         this.items = items;
 
         this.registerItemCraftingRecipes();
+        this.discoverItemCraftingRecipes();
     }
 
     private void registerItemCraftingRecipes() {
@@ -81,12 +83,45 @@ public class CustomItemManager {
             CustomItem item = this.items.get(id);
             for (CustomCraftingRecipe craftingRecipe : item.getRecipes()) {
                 NamespacedKey key = craftingRecipe.getKey();
-                this.plugin.getServer().removeRecipe(key);
+                boolean result = this.plugin.getServer().removeRecipe(key);
+            }
+        }
+    }
+
+    public void discoverItemCraftingRecipes() {
+        for (Player player : this.plugin.getServer().getOnlinePlayers()) {
+            this.discoverItemCraftingRecipesForPlayer(player);
+        }
+    }
+
+    public void discoverItemCraftingRecipesForPlayer(Player player) {
+        for (String id : this.getItems()) {
+            CustomItem item = this.getCustomItem(id);
+            List<CustomCraftingRecipe> recipes = item.getRecipes();
+            for (CustomCraftingRecipe recipe : recipes) {
+                player.discoverRecipe(recipe.getKey());
+            }
+        }
+    }
+
+    public void undiscoverItemCraftingRecipes() {
+        for (Player player : this.plugin.getServer().getOnlinePlayers()) {
+            this.undiscoverItemCraftingRecipesForPlayer(player);
+        }
+    }
+
+    public void undiscoverItemCraftingRecipesForPlayer(Player player) {
+        for (String id : this.getItems()) {
+            CustomItem item = this.getCustomItem(id);
+            List<CustomCraftingRecipe> recipes = item.getRecipes();
+            for (CustomCraftingRecipe recipe : recipes) {
+                player.undiscoverRecipe(recipe.getKey());
             }
         }
     }
 
     public void reload() {
+        this.undiscoverItemCraftingRecipes();
         this.unregisterItemCraftingRecipes();
         this.items = new HashMap<>();
 

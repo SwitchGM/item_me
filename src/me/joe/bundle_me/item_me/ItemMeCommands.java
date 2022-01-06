@@ -16,9 +16,9 @@ public class ItemMeCommands implements CommandExecutor {
     private ItemMePlugin plugin;
     private CustomItemManager manager;
 
-    public ItemMeCommands(ItemMePlugin plugin) {
+    public ItemMeCommands(ItemMePlugin plugin, CustomItemManager manager) {
         this.plugin = plugin;
-        this.manager = new CustomItemManager(plugin);
+        this.manager = manager;
     }
 
     @Override
