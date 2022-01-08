@@ -26,6 +26,7 @@ public class CustomItem {
     private boolean shiny = false;
     private List<CustomCraftingRecipe> recipes = new ArrayList<>();
     private Integer modelData = 0;
+    private float blockBreakTime = 999999999;
 
     public CustomItem(Material material) {
         this.material = material;
@@ -52,6 +53,7 @@ public class CustomItem {
         this.loreEnchanted = (Boolean) itemInfo.get("lore_enchanted");
         this.shiny = (Boolean) itemInfo.get("shiny");
         this.modelData = (Integer) itemInfo.get("model_data");
+        this.blockBreakTime = (Float) itemInfo.get("block_break_time");
 
         try {
             this.lore = (List<String>) itemInfo.get("lore");
@@ -180,6 +182,10 @@ public class CustomItem {
         return this.modelData;
     }
 
+    public float getBlockBreakTime() {
+        return this.blockBreakTime;
+    }
+
     public CustomItem setName(String name) {
         this.name = name;
         return this;
@@ -233,6 +239,11 @@ public class CustomItem {
 
     public CustomItem setModelData(Integer modelData) {
         this.modelData = modelData;
+        return this;
+    }
+
+    public CustomItem setBlockBreakTime(float blockBreakTime) {
+        this.blockBreakTime = blockBreakTime;
         return this;
     }
 

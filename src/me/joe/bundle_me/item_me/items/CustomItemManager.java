@@ -146,6 +146,7 @@ public class CustomItemManager {
         this.config.set(id + ".shiny", rawItemInfo.get("shiny"));
         this.config.set(id + ".recipes", rawItemInfo.get("recipes"));
         this.config.set(id + ".model_data", rawItemInfo.get("model_data"));
+        this.config.set(id + ".block_break_time", rawItemInfo.get("block_break_time"));
 
         this.plugin.saveConfig();
     }
@@ -161,6 +162,7 @@ public class CustomItemManager {
         rawItemInfoMap.put("lore_enchanted", rawItemInfo.getBoolean("lore_enchanted"));
         rawItemInfoMap.put("shiny", rawItemInfo.getBoolean("shiny"));
         rawItemInfoMap.put("model_data", rawItemInfo.getInt("model_data"));
+        rawItemInfoMap.put("block_break_time", rawItemInfo.getFloatList("block_break_time").get(0));
 
         String rawMaterial = rawItemInfo.getString("material");
         if (rawMaterial != null) {
@@ -206,6 +208,7 @@ public class CustomItemManager {
         rawItemInfo.put("lore_enchantment", item.isLoreEnchanted());
         rawItemInfo.put("shiny", item.isShiny());
         rawItemInfo.put("recipes", this.getRawItemCraftingRecipes(item.getRecipes()));
+        rawItemInfo.put("block_break_time", item.getBlockBreakTime());
 
         return rawItemInfo;
     }
