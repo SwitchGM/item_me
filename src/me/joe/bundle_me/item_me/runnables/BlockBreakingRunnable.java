@@ -46,18 +46,16 @@ public class BlockBreakingRunnable extends BukkitRunnable {
     }
 
     private void breakBlock() {
-        Material material = this.block.getType();
-        Location location = this.block.getLocation().add(0.5, 0.5, 0.5);
-        ItemStack drop = this.block.getDrops().iterator().next();
-
-        this.block.setType(Material.AIR);
-        this.player.getWorld().playEffect(location, Effect.STEP_SOUND, material);
-
         try {
+            Material material = this.block.getType();
+            Location location = this.block.getLocation().add(0.5, 0.5, 0.5);
+            ItemStack drop = this.block.getDrops().iterator().next();
+
+            this.block.setType(Material.AIR);
+            this.player.getWorld().playEffect(location, Effect.STEP_SOUND, material);
             this.player.getWorld().dropItem(location, drop);
             this.player.getWorld().playSound(location, Sound.valueOf(this.materialTypeToBreakSound(material)), 1F, 1F);
         } catch (IllegalArgumentException e) {
-            e.printStackTrace();
         }
 
         this.resetBlockAnimation();

@@ -162,7 +162,7 @@ public class CustomItemManager {
         rawItemInfoMap.put("lore_enchanted", rawItemInfo.getBoolean("lore_enchanted"));
         rawItemInfoMap.put("shiny", rawItemInfo.getBoolean("shiny"));
         rawItemInfoMap.put("model_data", rawItemInfo.getInt("model_data"));
-        rawItemInfoMap.put("block_break_time", rawItemInfo.getFloatList("block_break_time").get(0));
+        rawItemInfoMap.put("block_break_time", rawItemInfo.getInt("block_break_time"));
 
         String rawMaterial = rawItemInfo.getString("material");
         if (rawMaterial != null) {
@@ -196,7 +196,6 @@ public class CustomItemManager {
             if (meta instanceof Damageable) {
                 rawItemInfo.put("durability", ((Damageable) meta).getDamage());
             }
-
         }
 
         return rawItemInfo;

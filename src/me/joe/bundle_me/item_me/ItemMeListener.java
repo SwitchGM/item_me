@@ -39,7 +39,7 @@ public class ItemMeListener implements Listener {
     public void onStartDigging(StartDiggingEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
-        float time = event.getItem().getBlockBreakTime();
+        int time = event.getItem().getBlockBreakTime() / 1000; // convert from milliseconds to seconds
 
         this.blockDigManager.startBlockBreaking(player, block, time);
     }
